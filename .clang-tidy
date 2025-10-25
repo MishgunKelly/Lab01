@@ -1,0 +1,17 @@
+Checks: -*,readability-identifier-naming
+WarningsAsErrors: '*'
+
+CheckOptions:
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.LocalVariableMinLength
+    value: '2'
+  - key: readability-identifier-naming.LocalVariableIgnoredRegexp
+    value: '^(i|j)$'
+
+  - key: readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.ParameterMinLength
+    value: '2'
+  - key: readability-identifier-naming.ParameterIgnoredRegexp
+    value: '^(i|j)$'

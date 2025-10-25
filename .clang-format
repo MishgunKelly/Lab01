@@ -1,0 +1,16 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+UseTab: Never
+ColumnLimit: 79
+AllowShortIfStatementsOnASingleLine: false
+BreakBeforeBraces: Allman
+PointerAlignment: Left
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+SpaceAfterCStyleCast: true
+IndentCaseLabels: true
+BraceWrapping:
+  AfterControlStatement: true
+  AfterFunction: true
+  BeforeElse: true
+  BeforeCatch: true
