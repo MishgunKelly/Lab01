@@ -1,4 +1,4 @@
-name: Code Style Check
+name: C Labs CI
 
 on:
   push:
@@ -7,17 +7,20 @@ on:
     branches: [ "**" ]
 
 jobs:
-  check-style:
+  ci:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install tools
+      - name: Install toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-format clang-tidy
+          sudo apt-get install -y build-essential make gcc clang-format clang-tidy
+          sudo apt-get install -y libcriterion-dev
 
+      # 1) Проверка кодстайла (НЕ правит, только фейлит при несоответствии)
       - name: clang-format (lint)
         run: |
           files=$(git ls-files '*.c' '*.h')
@@ -28,12 +31,32 @@ jobs:
           echo "Checking formatting with .clang-format..."
           clang-format -style=file --dry-run -Werror $files
 
-      - name: clang-tidy (naming rules)
+      # 2) Статический анализ / правила нейминга (clang-tidy)
+      - name: clang-tidy (naming & basic checks)
         run: |
           files=$(git ls-files '*.c')
           if [ -z "$files" ]; then
             echo "No C sources to tidy."
             exit 0
           fi
-          echo "Checking naming with .clang-tidy..."
+          echo "Running clang-tidy with project settings..."
+          # Если в корне лежит .clang-tidy — он будет применён автоматически.
           clang-tidy --quiet -warnings-as-errors='*' $files -- -std=c11 -Iinclude
+
+      # 3) Сборка
+      - name: Build
+        run: |
+          make -j
+
+      # 4) Тесты
+      - name: Test
+        run: |
+          make test
+
+
+      # (опционально) Проверка утечек памяти — раскомментируй при необходимости
+      - name: Valgrind
+        run: |
+          sudo apt-get install -y valgrind
+          # для Criterion:
+          valgrind --error-exitcode=1 --leak-check=full ./tests_runner
