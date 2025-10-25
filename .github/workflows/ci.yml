@@ -1,0 +1,39 @@
+name: Code Style Check
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  check-style:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format clang-tidy
+
+      - name: clang-format (lint)
+        run: |
+          files=$(git ls-files '*.c' '*.h')
+          if [ -z "$files" ]; then
+            echo "No C files to check."
+            exit 0
+          fi
+          echo "Checking formatting with .clang-format..."
+          clang-format -style=file --dry-run -Werror $files
+
+      - name: clang-tidy (naming rules)
+        run: |
+          files=$(git ls-files '*.c')
+          if [ -z "$files" ]; then
+            echo "No C sources to tidy."
+            exit 0
+          fi
+          echo "Checking naming with .clang-tidy..."
+          clang-tidy --quiet -warnings-as-errors='*' $files -- -std=c11 -Iinclude
