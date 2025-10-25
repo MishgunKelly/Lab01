@@ -9,6 +9,9 @@ CheckOptions:
   - key: readability-identifier-naming.LocalVariableIgnoredRegexp
     value: '^(i|j)$'
 
+
+
+
   - key: readability-identifier-naming.ParameterCase
     value: lower_case
   - key: readability-identifier-naming.ParameterMinLength
