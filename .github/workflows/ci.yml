@@ -2,14 +2,13 @@ name: C Labs CI
 
 on:
   push:
-    branches: [ "**" ]
+    branches: ["**"]
   pull_request:
-    branches: [ "**" ]
+    branches: ["**"]
 
 jobs:
   ci:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,46 +16,29 @@ jobs:
       - name: Install toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential make gcc clang-format clang-tidy
-          sudo apt-get install -y libcriterion-dev
+          sudo apt-get install -y build-essential make gcc clang-format clang-tidy valgrind
 
-      # 1) Проверка кодстайла (НЕ правит, только фейлит при несоответствии)
+      # 1) Проверка кодстайла
       - name: clang-format (lint)
         run: |
           files=$(git ls-files '*.c' '*.h')
-          if [ -z "$files" ]; then
-            echo "No C files to check."
-            exit 0
-          fi
-          echo "Checking formatting with .clang-format..."
+          [ -z "$files" ] && exit 0
           clang-format -style=file --dry-run -Werror $files
 
-      # 2) Статический анализ / правила нейминга (clang-tidy)
-      - name: clang-tidy (naming & basic checks)
+      # 2) clang-tidy (имена/проверки)
+      - name: clang-tidy (naming & checks)
         run: |
           files=$(git ls-files '*.c')
-          if [ -z "$files" ]; then
-            echo "No C sources to tidy."
-            exit 0
-          fi
-          echo "Running clang-tidy with project settings..."
-          # Если в корне лежит .clang-tidy — он будет применён автоматически.
+          [ -z "$files" ] && exit 0
           clang-tidy --quiet -warnings-as-errors='*' $files -- -std=c11 -Iinclude
 
       # 3) Сборка
       - name: Build
-        run: |
-          make -j
+        run: make -j
 
-      # 4) Тесты
-      - name: Test
+      # 4) I/O тесты ПОД Valgrind (скрипт сам фейлит при утечках)
+      - name: IO tests (Valgrind)
         run: |
-          make test
-
-
-      # (опционально) Проверка утечек памяти — раскомментируй при необходимости
-      - name: Valgrind
-        run: |
-          sudo apt-get install -y valgrind
-          # для Criterion:
-          valgrind --error-exitcode=1 --leak-check=full ./tests_runner
+          # На всякий случай убедимся, что раннер исполняемый
+          [ -f tests/run_io_tests.sh ] && chmod +x tests/run_io_tests.sh || true
+          make          # твой Makefile по умолчанию запускает memcheck (Valgrind)
